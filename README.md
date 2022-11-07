@@ -12,3 +12,22 @@ To Play:
 - Run the program
 - When the blank window pops up, press and hold down the space bar to talk
 - Wait for a response from the ship's captain, and press and hold the space bar to respond
+
+
+Library Dependancies:
+
+numpy (not needed?)
+wave (not needed?)
+random
+pygame
+librosa
+speechrecognition
+openai
+playsound
+gtts
+Classes
+simpleaudio (requires)
+pedalboard
+soundfile
+pydub
+pyaudio (requires portaudio on mac)
