@@ -29,5 +29,5 @@ Classes
 simpleaudio (requires)
 pedalboard
 soundfile
-pydub
+pydub (requires ffmpeg)
 pyaudio (requires portaudio on mac)
