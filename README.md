@@ -8,8 +8,8 @@ pyaudio is not mac friendly, so avoid trying on a mac.
 
 To Play:
 
-- Install the required libraries
-- Get an API key from OpenAI (you can get one with a free trial) and enter it into the top of __main__ where it says YOUR_API_KEY.  If you want to use Cohere you can, you will need to comment out OpenAI code and comment in Cohere code.  The Cohere values are not as dialed in, so results may vary.
+- Install the required libraries (latests should work)
+- Get an API key from OpenAI (you can get one with a free trial) and enter it into the top of __main__ where it says YOUR_API_KEY.  If you want to use Cohere you can, you will need to comment out OpenAI code and comment in Cohere code.  The Cohere parameters are not as dialed in, so results may vary.
 - Make sure you have speakers and a microphone
 - Run the program
 - When the blank window pops up, press and hold down the space bar to talk
