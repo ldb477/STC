@@ -1,61 +1,48 @@
-import numpy
-import wave
-from random import sample
+
 import pygame
 import librosa
 import speech_recognition as srec
-import openai
-from playsound import playsound
 from gtts import gTTS
 import Classes
-import simpleaudio
 import pedalboard
 import soundfile
-from pydub import AudioSegment
+
+
+# Change these depending on which text generation engine used
+# Look for OpenAI/Cohere comments below
+import openai
 #import cohere
-
-#from scipy.io.wavfile import read
-
-
-t = srec.Recognizer()
-
-openai.api_key = "YOUR-API-KEY"
-#co = cohere.Client('YOUR-API-KEY')
-
-start_sequence = "\nSpace Ship Captain:"
-restart_sequence = "\n\nSpace Traffic Control:"
-
-#session_prompt = "The following is a conversation with a space ship captain. The ship captain is an old friend of yours.  You were in the intergalactic war together.  The space ship is in a critical state, and their oxygen is running very low.  The space ship captain is about to request permission to dock her space ship at your space station.\n\nSpace Traffic Control: Please request docking permission.\nSpace Ship Captain:"
-
-#session_prompt = "The following is a conversation between a space traffic controller and a space ship captain. The ship captain is trying to smuggle some illegal fruits onto the station.  The space ship captain is about to request permission to dock her space ship at your space station.\n\nSpace Traffic Control: Please request docking permission.\nSpace Ship Captain:"
-
-session_prompt = "The following is a conversation between a space traffic controller and a space ship captain. The space ship captain is about to request permission to dock her space ship at your space station.\n\nSpace Ship Captain: Hello, I would like to request docking permission.\n\nSpace Traffic Control: Please state the name of your ship.\nSpace Ship Captain: The name of my ship is the Constantinople.\n\nSpace Traffic Control: What is the nature of your business at this space station?\nSpace Ship Captain: We are traveling through the area and need to resupply.  We also have some things we may want to trade.\n\nSpace Traffic Control: Please request docking permission.\nSpace Ship Captain:"
-
-
-chat_log = ''
-question = ''
-answer = ''
-
-convoAssist = False
-
-
-
 
 
 def main():
 
-    chat_log = ''
+    t = srec.Recognizer()
 
+    #OpenAI
+    openai.api_key = "YOUR-API-KEY"
+
+    #Cohere
+    #co = cohere.Client('YOUR-API-KEY')
+
+    start_sequence = "\nSpace Ship Captain:"
+    restart_sequence = "\n\nSpace Traffic Control:"
+    chat_log = ''
+    question = ''
+    answer = ''
+
+    #session_prompt = "The following is a conversation with a space ship captain. The ship captain is an old friend of yours.  You were in the intergalactic war together.  The space ship is in a critical state, and their oxygen is running very low.  The space ship captain is about to request permission to dock her space ship at your space station.\n\nSpace Traffic Control: Please request docking permission.\nSpace Ship Captain:"
+
+    #session_prompt = "The following is a conversation between a space traffic controller and a space ship captain. The ship captain is trying to smuggle some illegal fruits onto the station.  The space ship captain is about to request permission to dock her space ship at your space station.\n\nSpace Traffic Control: Please request docking permission.\nSpace Ship Captain:"
+
+    session_prompt = "The following is a conversation between a space traffic controller and a space ship captain. The space ship captain is about to request permission to dock her space ship at your space station.\n\nSpace Ship Captain: Hello, I would like to request docking permission.\n\nSpace Traffic Control: Please state the name of your ship.\nSpace Ship Captain: The name of my ship is the Constantinople.\n\nSpace Traffic Control: What is the nature of your business at this space station?\nSpace Ship Captain: We are traveling through the area and need to resupply.  We also have some things we may want to trade.\n\nSpace Traffic Control: Please request docking permission.\nSpace Ship Captain:"
 
     pygame.init()
     screen = pygame.display.set_mode((240,180))
 
     spacePressed = False
     spaceReleased = True
-    enterPressed = False
+    recordingFinished = False
     recording = False
-    playing = False
-
     running = True
 
     while running:
@@ -67,38 +54,20 @@ def main():
                     spacePressed = True
                     spaceReleased = False
 
-                    #print("Space Bar has been pressed.")
-
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     spaceReleased = True
                     spacePressed = False
-
-                    #print("Space Bar has been released.")
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    enterPressed = True
-
-                    #print("Enter has been pressed.")
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_0:
-                    pass
-
 
             if event.type == pygame.QUIT:
                 running = False
 
 
 
-
-        # If space bar is pressed and not recording
+        # If space bar is pressed and not recording - Start Recording
         if spacePressed == True and recording == False:
 
-            blip3Wav = simpleaudio.WaveObject.from_wave_file("blip-3.wav")
-            blip3Play = blip3Wav.play()
-            blip3Play.wait_done()
+            playBlip("blip-3.wav")
 
             # Begin recording
             r = Classes.RecordAudioFile("output.wav")
@@ -107,45 +76,44 @@ def main():
             recording = True
             print("Starting Transmission.")
 
-        # If space bar is pressed and recording
+        # If space bar is pressed and recording - Continue Recording
         if spacePressed == True and recording == True:
             r.recordContinue()
 
-        # If space bar is released and recording
+        # If space bar is released and recording - Stop Recording
         if spaceReleased == True and recording == True:
 
-            blip4Wav = simpleaudio.WaveObject.from_wave_file("blip-4.wav")
-            blip4Play = blip4Wav.play()
-            blip4Play.wait_done()
+            playBlip("blip-4.wav")
 
             # Stop recording
             r.recordStop()
             recording = False
-            enterPressed = True
+            recordingFinished = True
             print("Transmission Stopped.")
             print('')
             
+        # If recording is finished
+        if recordingFinished == True:
 
-            
-
-        # If enter is pressed
-        if enterPressed == True:
-
-            enterPressed = False
+            recordingFinished = False
 
             filename = "output.wav"
 
+            # Give the recorded audio to Google to translate to text
             with srec.AudioFile(filename) as source:
-                # listen for the data (load audio to memory)
                 audio_data = t.record(source)
-                # recognize (convert from speech to text)
-                text = t.recognize_google(audio_data)
-                print(f'Space Traffic Control: {text}')
+                try:
+                    text = t.recognize_google(audio_data)
+                    print(f'Space Traffic Control: {text}')
+                    question = text
+                except:
+                    print("No speech heard, try again.")
+                    continue
 
-                question = text
-
-
+            # If this is the first token to text generation - Get Response Text
             if chat_log == '':
+
+                #OpenAI
                 response = openai.Completion.create(
                 engine="text-davinci-002",
                 prompt=session_prompt,
@@ -154,10 +122,12 @@ def main():
                 top_p=1,
                 frequency_penalty=0.0,
                 presence_penalty=0.6,
-                #stop=["You:", "Captain:"]
                 stop=["Space Traffic Control:", "Space Ship Captain:"]
                 )
 
+                answer = response["choices"][0]["text"]
+
+                #Cohere
                 # response = co.generate( 
                 # model='xlarge', 
                 # prompt=session_prompt, 
@@ -169,29 +139,27 @@ def main():
                 # presence_penalty=0.6, 
                 # stop_sequences=["Space Traffic Control:", "Space Ship Captain:"], 
                 # return_likelihoods='NONE') 
-
-                answer = response["choices"][0]["text"]
-
+                
                 #answer = response.generations[0].text
-
                 # Find "\n" from answer string and remove everything afterwards
-                location = answer.find('\n')
-                if location != -1:
-                    print("Location of carriage return = " + str(location))
-                    answer = answer[0:location]
-
+                # location = answer.find('\n')
+                # if location != -1:
+                #     print("Location of carriage return = " + str(location))
+                #     answer = answer[0:location]
                 #answer = answer.replace('Space Traffic Control:', '')
+
 
                 print(f'Space Ship Captain:{answer}')
                 print('')
 
                 chat_log = f'{session_prompt}{answer}'
 
-
+            # Or if this is not the first token - Get Response Text
             else:
 
                 prompt_text = f'{chat_log}{restart_sequence}:{question}{start_sequence}:'
 
+                #OpenAI
                 response = openai.Completion.create(
                 engine="text-davinci-002",
                 prompt=prompt_text,
@@ -200,10 +168,12 @@ def main():
                 top_p=1,
                 frequency_penalty=0.6,
                 presence_penalty=0.6,
-                #stop=["You:", "Captain:"]
                 stop=["Space Traffic Control:", "Space Ship Captain:"]
                 )
 
+                answer = response["choices"][0]["text"]
+
+                #Cohere
                 # response = co.generate( 
                 # model='xlarge', 
                 # prompt=prompt_text, 
@@ -216,39 +186,30 @@ def main():
                 # stop_sequences=["Space Traffic Control:", "Space Ship Captain:"], 
                 # return_likelihoods='NONE') 
 
-                answer = response["choices"][0]["text"]
-
                 #answer = response.generations[0].text
-
                 # Find "\n" from answer string and remove everything afterwards
-                location = answer.find('\n')
-                if location != -1:
-                    print("Location of carriage return = " + str(location))
-                    answer = answer[0:location]
+                # location = answer.find('\n')
+                # if location != -1:
+                #     print("Location of carriage return = " + str(location))
+                #     answer = answer[0:location]
 
 
                 print(f'Space Ship Captain:{answer}')
                 print('')
 
-                # if convoAssist == True:
-                #     chat_log = f'{chat_log}{answer}'
-                # else:
-                #     chat_log = f'{chat_log}{answer}{start_sequence}:'
-
                 chat_log = f'{chat_log}{restart_sequence} {question}{start_sequence} {answer}'    
 
                 print(chat_log)
 
-
+            # If there is text in the response
             if len(answer) > 0:
-                myobj = gTTS(text=answer, lang='en', slow=False, tld='co.in')
-                myobj.save('response.mp3')
 
-                sound = AudioSegment.from_mp3('response.mp3')
-                sound.export('responsewav.wav', format="wav")
+                # Send text to Google and get generated audio back
+                answerSpeech = gTTS(text=answer, lang='en', slow=False, tld='co.in')
+                answerSpeech.save('responsewav.wav')
 
+                # Prep the file and do some audio effects
                 y, sr = librosa.load('responsewav.wav', sr=44100)
-
 
                 hpf = pedalboard.HighpassFilter(cutoff_frequency_hz=2000)
                 effected = hpf(y, sample_rate=sr)
@@ -263,26 +224,30 @@ def main():
                 compressor = pedalboard.Compressor(threshold_db=-20, ratio=25)
                 effected = compressor(effected, sample_rate=sr)
 
+                # Save the effected audio file
+                soundfile.write('effectedresponsewav.wav', effected, sr, subtype='PCM_24')
+
+                # Play the response audio
+                playBlip("blip-1.wav")
+
+                pygame.time.wait(1000)
+
+                pygame.mixer.init()
+                res = pygame.mixer.Sound("effectedresponsewav.wav")
+                pygame.mixer.Sound.play(res)
+
+                responseLength = pygame.mixer.Sound.get_length(res)
+                responseLength = int((responseLength * 1000) + 100)
+                pygame.time.wait(responseLength)
+
+                playBlip("blip-2.wav")
             
 
-            soundfile.write('effectedresponsewav.wav', effected, sr, subtype='PCM_24')
-
-            
-            blip1Wav = simpleaudio.WaveObject.from_wave_file("blip-1.wav")
-            blip1Play = blip1Wav.play()
-            blip1Play.wait_done()
-
-            effectedresponsewav = simpleaudio.WaveObject.from_wave_file("effectedresponsewav.wav")
-            effectedresponsewavPlay = effectedresponsewav.play()
-            effectedresponsewavPlay.wait_done()
-
-            blip2Wav = simpleaudio.WaveObject.from_wave_file("blip-2.wav")
-            blip2Play = blip2Wav.play()
-            blip2Play.wait_done()
-            
-
-
-
+# Blip player
+def playBlip(filename):
+    pygame.mixer.init()
+    blip = pygame.mixer.Sound(filename)
+    pygame.mixer.Sound.play(blip)
 
 
 if __name__ == "__main__":
