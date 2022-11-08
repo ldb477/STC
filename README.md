@@ -1,7 +1,7 @@
 # STC
 Space Traffic Control
 
-This just a tech demo proof of concept for a space game where you (the Space Traffic Controller) must communicate over a walkie-talkie type comms channel in order to learn more about who they are and what is on their ship.  Because this is using OpenAI's GPT3 text generation, you can have a lot of fun with what you and the space ship captain talk about.  You can even make a new prompt that gives the ship's captain an ulterior motive.
+This just a tech demo proof of concept for a space game where you (the Space Traffic Controller) must communicate over a walkie-talkie type comms channel with a space ship captain in order to learn more about who they are and what is on their ship.  Because this is using OpenAI's GPT3 text generation, you can have a lot of fun with what you and the space ship captain talk about.  You can even make a new prompt that gives the ship's captain an ulterior motive.
 
 
 To Play:
