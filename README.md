@@ -13,24 +13,16 @@ To Play:
 - When the blank window pops up, press and hold down the space bar to talk
 - Wait for a response from the ship's captain, and press and hold the space bar to respond
 
-
+```
 Library Dependencies:
 
 pygame
-
 librosa
-
 speechrecognition
-
 gtts
-
 pedalboard
-
 soundfile
-
 openai OR cohere  <-- OpenAI is used by default, but Cohere can be commented in if desired
-
 pyaudio
-
 wave
-
+```
