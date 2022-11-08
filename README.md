@@ -17,12 +17,20 @@ To Play:
 Library Dependencies:
 
 pygame
+
 librosa
+
 speechrecognition
+
 gtts
+
 pedalboard
+
 soundfile
+
 openai OR cohere  <-- OpenAI is used by default, but Cohere can be commented in if desired
+
 pyaudio
+
 wave
 
